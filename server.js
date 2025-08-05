@@ -40,8 +40,9 @@ app.use("/api/about", aboutRoutes);
 app.use("/api/settings", settingRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
-app.listen(8080, () => {
-  console.log("🚀 Server running on http://localhost:5000");
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
 });
 
 app.use(errorHandler);
