@@ -45,7 +45,7 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server listening on port ${PORT}`);
 
   mongoose
-    .connect(process.env.MONGO_URI, {
+    .connect("mongodb+srv://byitconnect:2KdhZIurltn7wAzU@cluster0.qnkrgwa.mongodb.net/", {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     })
