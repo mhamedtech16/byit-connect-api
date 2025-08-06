@@ -14,7 +14,7 @@ const app = express();
 
 const cors = require("cors");
 const mongoose = require("mongoose");
-const errorHandler = require("./middlewares/errorHandler");
+//const errorHandler = require("./middlewares/errorHandler");
 require("dotenv").config();
 
 app.use(cors());
