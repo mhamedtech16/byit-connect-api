@@ -28,17 +28,7 @@ app.use(express.urlencoded({ extended: true }));
 //   .then(() => console.log("✅ Connected to MongoDB"))
 //   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
-app.use("/api/users", userRoutes);
-app.use("/api/clients", clientRoutes);
-app.use("/api/countries", countriesRoutes);
-app.use("/api/locations", locationsRoutes);
-app.use("/api/categories", categoriesRoutes);
-app.use("/api/roles", rolesRoutes);
-app.use("/api/permissions", permissionsRoutes);
-app.use("/api/socialLinks", socialLinksRoutes);
-app.use("/api/about", aboutRoutes);
-app.use("/api/settings", settingRoutes);
-app.use("/api/dashboard", dashboardRoutes);
+
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
@@ -51,6 +41,18 @@ app.listen(PORT, () => {
     })
     .then(() => console.log("✅ Connected to MongoDB"))
     .catch((err) => console.error("❌ MongoDB connection error:", err));
+
+  app.use("/api/users", userRoutes);
+app.use("/api/clients", clientRoutes);
+app.use("/api/countries", countriesRoutes);
+app.use("/api/locations", locationsRoutes);
+app.use("/api/categories", categoriesRoutes);
+app.use("/api/roles", rolesRoutes);
+app.use("/api/permissions", permissionsRoutes);
+app.use("/api/socialLinks", socialLinksRoutes);
+app.use("/api/about", aboutRoutes);
+app.use("/api/settings", settingRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 });
 
 app.use(errorHandler);
