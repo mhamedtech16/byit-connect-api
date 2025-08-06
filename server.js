@@ -21,7 +21,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 mongoose
-  .connect("mongodb+srv://byitconnect:<byitconnectdb_2025>@cluster0.qnkrgwa.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", {
+  .connect(""mongodb+srv://byitconnect:2KdhZIurltn7wAzU@cluster0.qnkrgwa.mongodb.net/",", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
