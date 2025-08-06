@@ -20,13 +20,13 @@ require("dotenv").config();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-mongoose
-  .connect("mongodb+srv://byitconnect:2KdhZIurltn7wAzU@cluster0.qnkrgwa.mongodb.net/", {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => console.log("✅ Connected to MongoDB"))
-  .catch((err) => console.error("❌ MongoDB connection error:", err));
+// mongoose
+//   .connect("mongodb+srv://byitconnect:2KdhZIurltn7wAzU@cluster0.qnkrgwa.mongodb.net/", {
+//     useNewUrlParser: true,
+//     useUnifiedTopology: true,
+//   })
+//   .then(() => console.log("✅ Connected to MongoDB"))
+//   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
 app.use("/api/users", userRoutes);
 app.use("/api/clients", clientRoutes);
