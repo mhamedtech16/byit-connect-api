@@ -13,6 +13,8 @@ const clientSchema = new mongoose.Schema(
     category:{type: Object, require: true},
     dontInformClient: Boolean,
     assignedTo: {type: String, require: true}, /// id of sales employee
+    comment: String,
+    dealValue: Number
   },
   { timestamps: true }
 );

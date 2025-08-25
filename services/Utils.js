@@ -20,6 +20,7 @@ const User = require('../models/User');
   return code;
 }
 
+
 module.exports = {
   generateUniqueInviteCode,
 };

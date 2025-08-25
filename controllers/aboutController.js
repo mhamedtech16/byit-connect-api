@@ -74,6 +74,6 @@ exports.updateAbout = async (req, res) => {
 };
 
 exports.getAbout = async (req, res) => {
-  const about = await About.find();
+  const about = await About.findOne();
   res.json({ data: about });
 };

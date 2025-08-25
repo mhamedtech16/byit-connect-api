@@ -17,7 +17,8 @@ const userSchema = new mongoose.Schema(
     verifyPhone:Boolean,
     invitationCode:String,
     fcmTokens:[String],
-    parentUser:{type: String, require: true}
+    parentUser:{type: String, require: true},
+    authority:[String]
   },
   { timestamps: true }
 );

@@ -57,7 +57,7 @@ exports.addUser = async (req, res) => {
   const { fullname, email, password, type, country, phone } = req.body;
   const hashed = await bcrypt.hash(password, 10);
   const invitationCode = await Utils.generateUniqueInviteCode();
-  const user = await User.create({ fullname, email, password: hashed, type, approved:true, country:country, verifycode:2354, verifyEmail:true, verifyPhone:true ,phone: phone, invitationCode: invitationCode, block: false});
+  const user = await User.create({ fullname, email, password: hashed, type, approved:true, country:country, verifycode:2354, verifyEmail:true, verifyPhone:true ,phone: phone, invitationCode: invitationCode, block:false});
   const cleanUser = await User.findById(user._id).select('-password'); /// Remove password from user object
   const userCountry = await Countries.findById(country)
   const userObject = cleanUser.toObject();
@@ -82,7 +82,33 @@ exports.getUser = async (req, res) => {
 };
 
 exports.getUsers = async (req, res) => {
-  const type = req.query.type;
-  const users = await User.find({type:type}).select('-password');
-  res.json({data: users});
+  try {
+    const { role, status } = req.query;
+    const querySearch = req.query.query
+
+    // بنبني query object فاضي
+    const query = {};
+
+    if (role) {
+      query.type = role;   // لو في role نحطه
+    }
+
+    if (status) {
+      query.block = status =='active'? false : true ;  // لو في status نحطه
+    }
+
+     if (querySearch) {
+    query.$or = [
+      { fullname: { $regex: querySearch, $options: 'i' } },
+      { email: { $regex: querySearch, $options: 'i' } },
+      { phone: { $regex: querySearch, $options: 'i' } },
+    ];
+  }
+
+    const users = await User.find(query).select('-password');
+    res.json({ data: users });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
 };
