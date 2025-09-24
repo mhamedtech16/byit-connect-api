@@ -101,14 +101,14 @@ exports.getUser = async (req, res) => {
 ///////////////  get Users
 exports.getUsers = async (req, res) => {
   try {
-    const { role, status } = req.query;
+    const { type, status } = req.query;
     const querySearch = req.query.query
 
     // بنبني query object فاضي
     const query = {};
 
-    if (role) {
-      query.type = role;   // لو في role نحطه
+    if (type) {
+      query.type = type;   // لو في role نحطه
     }
 
     if (status) {
