@@ -52,7 +52,7 @@ exports.login = async (req, res) => {
   res.json({ user: {id:userObject._id, ...userObject},token });
 };
 
-
+///////////////// Add New User
 exports.addUser = async (req, res) => {
   const { fullname, email, password, type, country, phone } = req.body;
   const hashed = await bcrypt.hash(password, 10);
@@ -69,8 +69,24 @@ exports.addUser = async (req, res) => {
   res.status(201).json({user:userObject,token});
 };
 
-exports.getUser = async (req, res) => {
+//////// Change Password
+exports.changeUserPassword = async (req, res) => {
+  const { password, phone } = req.body;
+  const hashed = await bcrypt.hash(password, 10);
 
+  const result = await User.updateOne(
+      { phone: phone },
+      { $set: { password: hashed } }
+    );
+console.log('UUU',phone,hashed);
+  const cleanUser = await User.findOne({phone : phone}).select('-password'); /// Remove password from user object
+  const userObject = cleanUser.toObject();
+
+  res.status(201).json({user:userObject});
+};
+
+///////////////  get single User
+exports.getUser = async (req, res) => {
   const userId = req.params.id;
   console.log('tttttt',userId)
   if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -81,6 +97,8 @@ exports.getUser = async (req, res) => {
   res.json({data: user});
 };
 
+
+///////////////  get Users
 exports.getUsers = async (req, res) => {
   try {
     const { role, status } = req.query;
