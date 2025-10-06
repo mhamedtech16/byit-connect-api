@@ -14,7 +14,8 @@ const clientSchema = new mongoose.Schema(
     dontInformClient: Boolean,
     assignedTo: {type: String, require: true}, /// id of sales employee
     comment: String,
-    dealValue: Number
+    dealValue: Number,
+    earnings:Number
   },
   { timestamps: true }
 );

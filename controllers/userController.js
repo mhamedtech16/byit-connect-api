@@ -50,7 +50,28 @@ exports.login = async (req, res) => {
     expiresIn: '365d',
   });
 
-  res.json({ user: {id:userObject._id, ...userObject},token });
+
+/// Calculate Earnings
+  const earningsResult = await Client.aggregate([
+    { $match: { userAdded: userObject._id.toString() } },
+    {
+      $group: {
+        _id: null,
+        earnings: { $sum: "$earnings" }
+      }
+    }
+  ])
+
+  const totalEarnings = earningsResult.length > 0 ? earningsResult[0].earnings : 0;
+  // ✅ ضيف الأرباح داخل object المستخدم
+  const userData = {
+    id:user._id,
+    ...userObject,
+    totalEarnings
+  };
+
+
+  res.json({ user: {id:userObject._id, ...userData},token });
 };
 
 ///////////////// Add New User
@@ -100,19 +121,20 @@ exports.getUser = async (req, res) => {
     {
       $group: {
         _id: null,
-        totalDealValue: { $sum: "$dealValue" }
+        earnings: { $sum: "$earnings" }
       }
     }
   ])
 
-  const totalEarnings = earningsResult.length > 0 ? earningsResult[0].totalDealValue : 0;
+  const totalEarnings = earningsResult.length > 0 ? earningsResult[0].earnings : 0;
 
   // ✅ ضيف الأرباح داخل object المستخدم
   const userData = {
+    id:user._id,
     ...user.toObject(),
     totalEarnings
   };
-  
+
   res.json({data: userData});
 };
 
