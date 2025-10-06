@@ -42,7 +42,7 @@ const PORT = process.env.PORT || 8080;
 //mongoose.connect("mongodb://127.0.0.1:27017/byitconnect_db", {
 mongoose
   .connect(
-    "mongodb+srv://byitconnect:2KdhZIurltn7wAzU@cluster0.qnkrgwa.mongodb.net/byitconnect_stg",
+    "mongodb+srv://byitconnect:2KdhZIurltn7wAzU@cluster0.qnkrgwa.mongodb.net/byitconnect_db",
     {
       useNewUrlParser: true,
       useUnifiedTopology: true,
