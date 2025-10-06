@@ -88,13 +88,31 @@ console.log('UUU',phone,hashed);
 ///////////////  get single User
 exports.getUser = async (req, res) => {
   const userId = req.params.id;
-  console.log('tttttt',userId)
   if (!mongoose.Types.ObjectId.isValid(userId)) {
      return res.status(400).json({ error: 'Invalid user ID' });
    }
 
   const user = await User.findOne({_id:new mongoose.Types.ObjectId(userId)}).select('-password');
-  res.json({data: user});
+
+  const earningsResult = await db.collection('clients').aggregate([
+    { $match: { userAdded: userId } },
+    {
+      $group: {
+        _id: null,
+        totalDealValue: { $sum: "$dealValue" }
+      }
+    }
+  ]).toArray();
+
+  const totalEarnings = earningsResult.length > 0 ? earningsResult[0].totalDealValue : 0;
+
+  // ✅ ضيف الأرباح داخل object المستخدم
+  const userData = {
+    ...user.toObject(),
+    totalEarnings
+  };
+  
+  res.json({data: userData});
 };
 
 
