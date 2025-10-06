@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Client = require('../models/Client');
 const Countries = require('../models/Countries');
 const Utils = require('../services/Utils')
 const bcrypt = require('bcrypt');
@@ -94,7 +95,7 @@ exports.getUser = async (req, res) => {
 
   const user = await User.findOne({_id:new mongoose.Types.ObjectId(userId)}).select('-password');
 
-  const earningsResult = await db.collection('clients').aggregate([
+  const earningsResult = await Client.aggregate([
     { $match: { userAdded: userId } },
     {
       $group: {
@@ -102,7 +103,7 @@ exports.getUser = async (req, res) => {
         totalDealValue: { $sum: "$dealValue" }
       }
     }
-  ]).toArray();
+  ])
 
   const totalEarnings = earningsResult.length > 0 ? earningsResult[0].totalDealValue : 0;
 
