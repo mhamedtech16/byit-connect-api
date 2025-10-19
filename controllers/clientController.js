@@ -146,7 +146,7 @@ exports.getClients = async (req, res) => {
         }
 
         const [clients, total] = await Promise.all([
-            Client.find(query).skip(skip).limit(limit),
+            Client.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit),
             Client.countDocuments(query)
         ]);
 
