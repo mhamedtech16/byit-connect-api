@@ -6,8 +6,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 exports.addClient = async (req, res) => {
-  const lastUserSeq = await Client.findOne().sort({ seq: -1 });
-  const newSeq = lastUserSeq ? lastUserSeq.seq + 1 : 1;
+  //const lastUserSeq = await Client.findOne().sort({ seq: -1 });
+  //const newSeq = lastUserSeq ? lastUserSeq.seq + 1 : 1;
 
 const {category, location}  = req.body
  var categoryObj={}
@@ -23,7 +23,7 @@ const {category, location}  = req.body
 console.log('parentUser',currentUser.parentUser);
   const parentUser = await User.findOne({_id:currentUser.parentUser.toString()});
 
-  const client = await Client.create({seq:newSeq, clientName, clientPhone , userAdded: user, status: 'NEW', fromPrice, toPrice, dontInformClient, assignedTo: parentUser._id.toString(), category: categoryObj, location: locationObj});
+  const client = await Client.create({ clientName, clientPhone , userAdded: user, status: 'NEW', fromPrice, toPrice, dontInformClient, assignedTo: parentUser._id.toString(), category: categoryObj, location: locationObj});
   res.status(201).json({success:true,data:client});
 };
 
