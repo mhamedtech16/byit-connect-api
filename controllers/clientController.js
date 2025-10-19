@@ -116,14 +116,14 @@ exports.getClients = async (req, res) => {
         const user = req.user;
         const assignedTo = req.query.assignedTo;
         const userAdded = req.query.userAdded
-        const status = req.query.status
+        const status = req.query['status[]'];
+        const txtSearch = req.query.query
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
 
         const loggedInUser = await User.findById(user.id).select('+authority');
         const userAuthority = loggedInUser?.authority || [];
-
         let query = {};
 
         if (userAuthority.includes('ADMIN') || userAuthority.includes('SALESMNGR')) {
@@ -144,6 +144,12 @@ exports.getClients = async (req, res) => {
         if (status) {
             query.status = status;
         }
+        if (txtSearch) {
+    query.$or = [
+        { clientName: { $regex: txtSearch, $options: 'i' } },
+        { clientPhone: { $regex: txtSearch, $options: 'i' } }
+    ];
+}
 
         const [clients, total] = await Promise.all([
             Client.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit),
