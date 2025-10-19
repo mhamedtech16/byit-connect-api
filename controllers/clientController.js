@@ -18,7 +18,7 @@ const {category, location}  = req.body
  if(location){
     locationObj= await Locations.find({ _id: { $in: location }}) }
 
-  const { seq, clientName, clientPhone, fromPrice, toPrice, dontInformClient, user } = req.body;
+  const { clientName, clientPhone, fromPrice, toPrice, dontInformClient, user } = req.body;
   const currentUser = await User.findOne({_id:user.toString()});
 console.log('parentUser',currentUser.parentUser);
   const parentUser = await User.findOne({_id:currentUser.parentUser.toString()});
