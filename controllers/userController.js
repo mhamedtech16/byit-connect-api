@@ -6,6 +6,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const { validateRequiredFields, checkUniqueFields } = require('../services/fieldValidator');
+const sendOtpSMS = require('../services/Utils');
+const { requestVerificationCode } = require('../services/verificationService');
 
 exports.signup = async (req, res) => {
   const requiredFields = ['fullname', 'email', 'password', 'type', 'country', 'phone'];
@@ -92,8 +94,8 @@ exports.addUser = async (req, res) => {
 };
 
 //////// Change Password
-exports.changeUserPassword = async (req, res) => {
-  const { password, phone } = req.body;
+exports.changePassword = async (req, res) => {
+  const { oldPassword, password, phone } = req.body;
   const hashed = await bcrypt.hash(password, 10);
 
   const result = await User.updateOne(
@@ -106,6 +108,107 @@ console.log('UUU',phone,hashed);
 
   res.status(201).json({user:userObject});
 };
+
+/////======
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { phone } = req.body;
+
+    if (!phone) {
+      return res.status(400).json({ ok: false, message: 'من فضلك أدخل رقم الهاتف.' });
+    }
+
+    // normalize the phone number (نفس اللي في service عشان التوافق)
+  //  const normalizedPhone = phone.startsWith('+') ? phone : '+2' + phone.replace(/^0/, '');
+
+    // تحقق من وجود المستخدم
+    const user = await User.findOne({ phone: phone });
+    if (!user) {
+      return res.status(404).json({ ok: false, message: 'هذا الرقم غير مسجل لدينا.' });
+    }
+
+    // الرقم موجود، أرسل كود التحقق
+    const result = await requestVerificationCode({
+      phone: phone,
+      purpose: 'ResetPassword'
+    });
+
+    return res.json(result);
+  } catch (err) {
+    console.error('forgotPassword error:', err.message);
+    return res.status(500).json({ ok: false, message: 'حدث خطأ أثناء تنفيذ الطلب.' });
+  }
+};
+/////=====
+exports.verifyCode = async (req, res) => {
+  const { phone, code } = req.body;
+  if (!phone || !code) return res.status(400).json({ ok: false, message: 'الرجاء إدخال رقم الهاتف والرمز.' });
+
+  try {
+    const result = await verifyResetCode(phone, code);
+    // result.resetToken => يُستخدم في خطوة تغيير كلمة المرور
+    return res.json(result);
+  } catch (err) {
+    console.error('verifyCode error:', err.message);
+    return res.status(400).json({ ok: false, message: err.message });
+  }
+};
+////=====
+exports.resetPassword = async (req, res) => {
+  const { phone, code, newPassword } = req.body;
+
+  if (!phone || !code || !newPassword) {
+    return res.status(400).json({ ok: false, message: 'يرجى إدخال رقم الهاتف والرمز وكلمة المرور الجديدة.' });
+  }
+
+  if (newPassword.length < 6) {
+    return res.status(400).json({ ok: false, message: 'كلمة المرور الجديدة ضعيفة جداً.' });
+  }
+
+  try {
+    const pr = await PasswordReset.findOne({
+      phone,
+      used: false,
+      expiresAt: { $gt: new Date() }
+    }).sort({ createdAt: -1 });
+
+    if (!pr) {
+      return res.status(400).json({ ok: false, message: 'الرمز غير صالح أو منتهي الصلاحية.' });
+    }
+
+    if (pr.attempts >= 5) {
+      return res.status(400).json({ ok: false, message: 'تم تجاوز عدد المحاولات المسموح بها.' });
+    }
+
+    const isMatch = await bcrypt.compare(code, pr.codeHash);
+    pr.attempts += 1;
+
+    if (!isMatch) {
+      await pr.save();
+      return res.status(400).json({ ok: false, message: 'الرمز غير صحيح.' });
+    }
+
+    // الرمز صحيح، نحدث الباسورد
+    const user = await User.findOne({ phone });
+    if (!user) {
+      return res.status(404).json({ ok: false, message: 'المستخدم غير موجود.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    // علمنا الرمز أنه استُخدم
+    pr.used = true;
+    await pr.save();
+
+    return res.json({ ok: true, message: 'تم تعيين كلمة مرور جديدة بنجاح.' });
+  } catch (err) {
+    console.error('resetPassword error:', err.message);
+    return res.status(500).json({ ok: false, message: 'حدث خطأ أثناء إعادة التعيين.' });
+  }
+};
+/////////////
 
 ///////////////  get single User
 exports.getUser = async (req, res) => {
