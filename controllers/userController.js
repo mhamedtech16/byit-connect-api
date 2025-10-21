@@ -6,7 +6,6 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const { validateRequiredFields, checkUniqueFields } = require('../services/fieldValidator');
-const sendOtpSMS = require('../services/Utils');
 const { requestVerificationCode } = require('../services/verificationService');
 
 exports.signup = async (req, res) => {

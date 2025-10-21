@@ -37,13 +37,13 @@ function normalizeEgyptPhone(phone) {
  * requestVerificationCode
  * purpose: 'reset_password', 'activate_account', 'change_phone', ...
  */
-async function requestVerificationCode({ phone, purpose = 'reset_password' }) {
+async function requestVerificationCode({ phone, purpose = 'ResetPassword' }) {
   if (!phone) throw new Error('رقم الهاتف مطلوب.');
 
   const normalizedPhone = normalizeEgyptPhone(phone);
 
   // قبل إنشاء الكود: تأكد إن الحساب موجود (لـ reset_password)
-  if (purpose === 'reset_password') {
+  if (purpose === 'ResetPassword') {
     const user = await User.findOne({ phone: normalizedPhone });
     if (!user) {
       // لا نكشف وجود الحساب: نُعيد رد عام بدون إنشاء أو إرسال SMS
@@ -96,7 +96,8 @@ async function requestVerificationCode({ phone, purpose = 'reset_password' }) {
   await vc.save();
 
   // نص الرسالة: عدّله حسب لغتك/علامتك
-  const text = `رمز التحقق: ${code}. صالح ${CODE_TTL_MINUTES} دقائق.`;
+//  const text = `رمز التحقق: ${code}. صالح ${CODE_TTL_MINUTES} دقائق.`;
+  const text = `Your Byit verification code is ${code} .Do not share this code with `
 
   try {
     const smsResp = await sendSms({ to: normalizedPhone, message: text });
