@@ -59,5 +59,5 @@ async function sendOtpSMS({ to, message }) {
 
 module.exports = {
   generateUniqueInviteCode,
-  sendSms
+  sendOtpSMS
 };

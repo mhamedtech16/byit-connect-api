@@ -1,9 +1,9 @@
 // services/verificationService.js
 require('dotenv').config();
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 const VerificationCode = require('../models/VerificationCode'); // أو '../models/PasswordReset' لو اسم الموديل القديم
 const User = require('../models/User');
-const sendSms = require('../utils/sendSms');
+const sendOtpSMS = require('../services/Utils');
 
 const CODE_LENGTH = parseInt(process.env.CODE_LENGTH || '4', 10);
 const CODE_TTL_MINUTES = parseInt(process.env.CODE_TTL_MINUTES || '10', 10);
@@ -100,7 +100,7 @@ async function requestVerificationCode({ phone, purpose = 'ResetPassword' }) {
   const text = `Your Byit verification code is ${code} .Do not share this code with `
 
   try {
-    const smsResp = await sendSms({ to: normalizedPhone, message: text });
+    const smsResp = await sendOtpSMS({ to: normalizedPhone, message: text });
     // سجّل استجابة المزود (للدباغing) لكن لا تحتفظ بالكود النصي
     console.info('SMS provider response:', smsResp.providerResponse || smsResp);
   } catch (err) {
