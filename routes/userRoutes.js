@@ -12,6 +12,7 @@ router.get('/getUser/:id', authMiddleware, userController.getUser); // 👈 مح
 router.post('/addUser', authMiddleware, userController.addUser); // 👈 محمي
 router.put('/changePassword', authMiddleware, userController.changePassword); // 👈 محمي
 router.post('/forgotPassword', userController.forgotPassword);
+router.post('/setNewPassword',authMiddleware, userController.setNewPassword);
 router.post('/resetPasswordWithCode', userController.resetPasswordWithCode);
 router.post('/verifyCode', userController.verifyCode);
 

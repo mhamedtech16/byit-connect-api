@@ -40,10 +40,12 @@ exports.signup = async (req, res) => {
 
 exports.login = async (req, res) => {
   const { phone, password } = req.body;
-  const user = await User.findOne({ phone, block:false }).select('+password');
-  if (!user) return res.status(401).json({ message: req.__('AUTH.INVALID_CREDENTIALS') });
-
+  const user = await User.findOne({ phone, block:false, deleted: { $ne: true }  }).select('+password');
+  if (!user) return res.status(401).json({ message: req.__('AUTH.USER_NOT_FOUND') });
+  //const hashed = await bcrypt.hash(password, 10);
+console.log('password',user);
   const isMatch = await bcrypt.compare(password, user.password);
+  console.log('password',isMatch);
   if (!isMatch) return res.status(401).json({ message: req.__('AUTH.INVALID_CREDENTIALS') });
   const userObject = user.toObject();
   //userObject.id = user._id
@@ -93,6 +95,40 @@ exports.addUser = async (req, res) => {
   res.status(201).json({user:userObject,token});
 };
 
+///// Set New PasswordReset
+exports.setNewPassword = async (req, res) => {
+  try {
+    const currentUser = req.user;
+    const { phone, password } = req.body;
+
+
+    // جلب المستخدم من قاعدة البيانات
+    const user = await User.findOne({ _id: currentUser.id }).select('+password');;
+
+    if (!user) {
+      return res.status(404).json({ error: req.__('AUTH.USER_NOT_FOUND') });
+    }
+
+    // تشفير كلمة المرور الجديدة
+    const hashed = await bcrypt.hash(password, 10);
+console.log('userrrr',phone, hashed);
+    // تحديث كلمة المرور
+    await User.updateOne(
+      { phone: user.phone },
+      { $set: { password: hashed } }
+    );
+
+    // جلب بيانات المستخدم بدون كلمة المرور
+  //  const cleanUser = await User.findOne({ phone: user.phone }).select('-password');
+  //  const userObject = cleanUser.toObject();
+
+    res.status(200).json({ data: true, message:  req.__('AUTH.PASSWORD_CHANGED')  });
+
+  } catch (err) {
+    console.error('Error changing password:', err);
+    res.status(500).json({ error: req.__('AUTH.RESET_ERROR')});
+  }
+};
 //////// Change Password
 exports.changePassword = async (req, res) => {
   try {
