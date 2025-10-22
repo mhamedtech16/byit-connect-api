@@ -3,7 +3,7 @@ require('dotenv').config();
 const bcrypt = require('bcrypt');
 const VerificationCode = require('../models/VerificationCode'); // أو '../models/PasswordReset' لو اسم الموديل القديم
 const User = require('../models/User');
-const sendOtpSMS = require('../services/Utils');
+const {sendOtpSMS} = require('./Utils');
 
 const CODE_LENGTH = parseInt(process.env.CODE_LENGTH || '4', 10);
 const CODE_TTL_MINUTES = parseInt(process.env.CODE_TTL_MINUTES || '10', 10);
@@ -22,6 +22,7 @@ function generateNumericCode(len = CODE_LENGTH) {
 
 // تحويل بسيط لصيغة E.164 لمصر لو لازم (افتراضي لو الرقم يبدأ بـ0)
 function normalizeEgyptPhone(phone) {
+
   if (!phone) return phone;
   let p = phone.trim();
   // لو بيمرر +20 بالفعل، نخليها كما هي
@@ -29,7 +30,11 @@ function normalizeEgyptPhone(phone) {
   // لو بدأ بـ 0 and length 11 => 010XXXXXXXX => +2010...
   if (p.startsWith('0')) return '+2' + p;
   // ممكن يكون بدون صفر: 10XXXXXXXX => +2010...
-  if (/^\d{10,11}$/.test(p)) return '+2' + p.replace(/^0/, '');
+  //if (/^\d{10,11}$/.test(p)) return '+2' + p.replace(/^0/, '');
+
+  if (/^1\d{9}$/.test(p)) {
+    return '+20' + p;
+  }
   return p; // fallback: كما هو
 }
 
@@ -38,13 +43,14 @@ function normalizeEgyptPhone(phone) {
  * purpose: 'reset_password', 'activate_account', 'change_phone', ...
  */
 async function requestVerificationCode({ phone, purpose = 'ResetPassword' }) {
+
   if (!phone) throw new Error('رقم الهاتف مطلوب.');
 
   const normalizedPhone = normalizeEgyptPhone(phone);
 
   // قبل إنشاء الكود: تأكد إن الحساب موجود (لـ reset_password)
   if (purpose === 'ResetPassword') {
-    const user = await User.findOne({ phone: normalizedPhone });
+    const user = await User.findOne({ phone: phone });
     if (!user) {
       // لا نكشف وجود الحساب: نُعيد رد عام بدون إنشاء أو إرسال SMS
       return { ok: true, message: 'إذا كان الرقم مسجلاً، سترسل رسالة له برمز التحقق.' };
@@ -54,7 +60,7 @@ async function requestVerificationCode({ phone, purpose = 'ResetPassword' }) {
   // تحقق من وجود طلب حديث لمنع إعادة الإرسال السريعة (cooldown)
   const now = new Date();
   const recent = await VerificationCode.findOne({
-    phone: normalizedPhone,
+    phone: phone,
     type: purpose,
     used: false
   }).sort({ createdAt: -1 });
@@ -69,7 +75,7 @@ async function requestVerificationCode({ phone, purpose = 'ResetPassword' }) {
 
     // لمنع تراكم سجلات كثيرة لنفس الشخص: نحذف أو نعلم السجلات القديمة إذا عددهم كبير
     const activeCount = await VerificationCode.countDocuments({
-      phone: normalizedPhone,
+      phone: phone,
       type: purpose,
       used: false,
       expiresAt: { $gt: now }
@@ -87,7 +93,7 @@ async function requestVerificationCode({ phone, purpose = 'ResetPassword' }) {
   const expiresAt = new Date(Date.now() + CODE_TTL_MINUTES * 60 * 1000);
 
   const vc = new VerificationCode({
-    phone: normalizedPhone,
+    phone: phone,
     codeHash,
     type: purpose,
     expiresAt

@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const { validateRequiredFields, checkUniqueFields } = require('../services/fieldValidator');
 const { requestVerificationCode } = require('../services/verificationService');
+const VerificationCode = require('../models/VerificationCode');
 
 exports.signup = async (req, res) => {
   const requiredFields = ['fullname', 'email', 'password', 'type', 'country', 'phone'];
@@ -112,7 +113,6 @@ console.log('UUU',phone,hashed);
 exports.forgotPassword = async (req, res) => {
   try {
     const { phone } = req.body;
-
     if (!phone) {
       return res.status(400).json({ ok: false, message: 'من فضلك أدخل رقم الهاتف.' });
     }
@@ -153,60 +153,88 @@ exports.verifyCode = async (req, res) => {
   }
 };
 ////=====
-exports.resetPassword = async (req, res) => {
-  const { phone, code, newPassword } = req.body;
 
-  if (!phone || !code || !newPassword) {
-    return res.status(400).json({ ok: false, message: 'يرجى إدخال رقم الهاتف والرمز وكلمة المرور الجديدة.' });
-  }
-
-  if (newPassword.length < 6) {
-    return res.status(400).json({ ok: false, message: 'كلمة المرور الجديدة ضعيفة جداً.' });
-  }
-
+/**
+ * resetPasswordWithCode
+ * body: { phone, code, newPassword }
+ */
+exports.resetPasswordWithCode = async (req, res) => {
   try {
-    const pr = await PasswordReset.findOne({
-      phone,
+    const { phone, code, newPassword } = req.body;
+
+    if (!phone || !code || !newPassword) {
+      return res.status(400).json({ ok: false, message: 'الرجاء إدخال الهاتف، الكود، وكلمة المرور الجديدة.' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ ok: false, message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل.' });
+    }
+console.log('phoneee',phone, newPassword,code);
+  //  const normalizedPhone = normalizeEgyptPhone(phone);
+
+    // جلب أحدث كود صالح من نوع reset_password
+    const now = new Date();
+    const vc = await VerificationCode.findOne({
+      phone: phone,
+      type: 'ResetPassword',
       used: false,
-      expiresAt: { $gt: new Date() }
+      expiresAt: { $gt: now }
     }).sort({ createdAt: -1 });
 
-    if (!pr) {
+    if (!vc) {
       return res.status(400).json({ ok: false, message: 'الرمز غير صالح أو منتهي الصلاحية.' });
     }
 
-    if (pr.attempts >= 5) {
-      return res.status(400).json({ ok: false, message: 'تم تجاوز عدد المحاولات المسموح بها.' });
+    if (vc.attempts >= 5) {
+      return res.status(429).json({ ok: false, message: 'تم تجاوز عدد المحاولات المسموح بها.' });
     }
 
-    const isMatch = await bcrypt.compare(code, pr.codeHash);
-    pr.attempts += 1;
+    // قارن الكود المقدم مع الهَش
+    const isMatch = await bcrypt.compare(code, vc.codeHash);
+
+    // زد عدد المحاولات واحفظ (إذا فشل أو نجح نحفظ الزيادة أولًا للحد من الاستغلال)
+    vc.attempts = (vc.attempts || 0) + 1;
 
     if (!isMatch) {
-      await pr.save();
+      await vc.save();
       return res.status(400).json({ ok: false, message: 'الرمز غير صحيح.' });
     }
 
-    // الرمز صحيح، نحدث الباسورد
-    const user = await User.findOne({ phone });
+    // الكود صحيح -> تأكد من وجود المستخدم
+    const user = await User.findOne({ phone: phone });
     if (!user) {
+      // نعلم الكود كمستخدم لحمايته من إعادة استعمال، لكن نُرجع رسالة عامة
+      vc.used = true;
+      await vc.save();
       return res.status(404).json({ ok: false, message: 'المستخدم غير موجود.' });
     }
 
+    // هاش الباسورد الجديد وحفظه
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     await user.save();
 
-    // علمنا الرمز أنه استُخدم
-    pr.used = true;
-    await pr.save();
+    // علم الكود أنه استُخدم
+    vc.used = true;
+    await vc.save();
 
-    return res.json({ ok: true, message: 'تم تعيين كلمة مرور جديدة بنجاح.' });
+    // اختياري: تعطيل/حذف أكواد أخرى لنفس الهاتف وغرض reset_password
+    try {
+      await VerificationCode.updateMany(
+        { phone: phone, type: 'ResetPassword', used: false },
+        { $set: { used: true } }
+      );
+    } catch (e) {
+      console.warn('Warning: failed to mark other codes used:', e.message);
+    }
+
+    return res.json({ ok: true, message: 'تم تحديث كلمة المرور بنجاح.' });
   } catch (err) {
-    console.error('resetPassword error:', err.message);
-    return res.status(500).json({ ok: false, message: 'حدث خطأ أثناء إعادة التعيين.' });
+    console.error('resetPasswordWithCode error:', err);
+    return res.status(500).json({ ok: false, message: 'حدث خطأ أثناء عملية إعادة التعيين.' });
   }
 };
+
 /////////////
 
 ///////////////  get single User

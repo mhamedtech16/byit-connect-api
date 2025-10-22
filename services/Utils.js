@@ -25,6 +25,7 @@ const axios = require('axios');
 ////===== send OTP SMS
 
 async function sendOtpSMS({ to, message }) {
+
   const username = process.env.SMS_USERNAME;
   const password = process.env.SMS_PASSWORD;
   const sendername = process.env.SMS_SENDER;
@@ -34,16 +35,17 @@ async function sendOtpSMS({ to, message }) {
     throw new Error('بيانات مزود خدمة SMS ناقصة. تحقق من ملف .env');
   }
 
-  const params = new URLSearchParams({
-    username,
-    password,
-    sendername,
-    message,
-    mobiles: to
-  });
+  // const params = new URLSearchParams({
+  //   username,
+  //   password,
+  //   sendername,
+  //   message,
+  //   mobiles: to
+  // });
 
-  const url = `${baseUrl}?${params.toString()}`;
-
+  //const url = `${baseUrl}?${params.toString()}`;
+  const url = `${baseUrl}?username=${username}&password=${password}&sendername=${sendername}&message=${encodeURIComponent(message)}&mobiles=${to}`;
+console.log('phoo',url);
   try {
     const response = await axios.get(url, { timeout: 10000 }); // 10 ثواني مهلة
     console.log('SMS Response:', response.data); // لمتابعة الاستجابة
