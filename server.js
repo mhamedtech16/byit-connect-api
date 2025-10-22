@@ -11,12 +11,30 @@ const socialLinksRoutes = require("./routes/socialLinksRoutes");
 const aboutRoutes = require("./routes/aboutRoutes");
 const settingRoutes = require("./routes/settingRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const i18n = require('i18n');
+const path = require('path');
 
 const cors = require("cors");
 const mongoose = require("mongoose");
 const errorHandler = require("./middlewares/errorHandler");
 require("dotenv").config();
 
+//////// Language
+
+i18n.configure({
+  locales: ['en', 'ar'],
+  directory: path.join(__dirname, 'locales'),
+  defaultLocale: 'en',
+  queryParameter: 'lang',
+  header: 'accept-language',
+  autoReload: true,
+  syncFiles: true,
+  objectNotation: true
+});
+app.use(i18n.init);
+
+
+///////=====
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

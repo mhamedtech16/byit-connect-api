@@ -1,0 +1,29 @@
+{
+	"AUTH": {
+		"INVALID_CREDENTIALS": "Invalid credentials.",
+		"PASSWORD_CHANGED": "Password changed successfully.",
+		"OLD_PASSWORD_REQUIRED": "Old and new passwords are required.",
+		"OLD_PASSWORD_INCORRECT": "Old password is incorrect.",
+		"USER_NOT_FOUND": "User not found.",
+		"PHONE_REQUIRED": "Please enter your phone number.",
+		"PHONE_NOT_REGISTERED": "This phone number is not registered.",
+		"CODE_REQUIRED": "Please provide both phone number and verification code.",
+		"INVALID_OR_EXPIRED_CODE": "Invalid or expired verification code.",
+		"TOO_MANY_ATTEMPTS": "Too many verification attempts.",
+		"CODE_INCORRECT": "Incorrect verification code.",
+		"PASSWORD_RESET_SUCCESS": "Password has been successfully updated.",
+		"RESET_ERROR": "An error occurred during password reset."
+	},
+	"VALIDATION": {
+		"MISSING_REQUIRED_FIELDS": "Please fill in all required fields.",
+		"EMAIL_OR_PHONE_TAKEN": "Email or phone number already in use.",
+		"NEW_PASSWORD_TOO_SHORT": "Password must be at least 6 characters long.",
+		"INVALID_USER_ID": "Invalid user ID.",
+		"RESET_FIELDS_REQUIRED": "Please enter the phone number, verification code, and new password."
+	},
+	"GENERAL": {
+		"SERVER_ERROR": "Server error occurred.",
+		"REQUEST_FAILED": "An error occurred while processing the request."
+	},
+	"PASSWORD_CHANGED": "PASSWORD_CHANGED"
+}

@@ -1,0 +1,29 @@
+{
+	"AUTH": {
+		"INVALID_CREDENTIALS": "بيانات الدخول غير صحيحة.",
+		"PASSWORD_CHANGED": "تم تغيير كلمة المرور بنجاح.",
+		"OLD_PASSWORD_REQUIRED": "كلمة المرور القديمة والجديدة مطلوبة.",
+		"OLD_PASSWORD_INCORRECT": "كلمة المرور القديمة غير صحيحة.",
+		"USER_NOT_FOUND": "المستخدم غير موجود.",
+		"PHONE_REQUIRED": "من فضلك أدخل رقم الهاتف.",
+		"PHONE_NOT_REGISTERED": "هذا الرقم غير مسجل لدينا.",
+		"CODE_REQUIRED": "الرجاء إدخال رقم الهاتف والرمز.",
+		"INVALID_OR_EXPIRED_CODE": "الرمز غير صالح أو منتهي الصلاحية.",
+		"TOO_MANY_ATTEMPTS": "تم تجاوز عدد المحاولات المسموح بها.",
+		"CODE_INCORRECT": "الرمز غير صحيح.",
+		"PASSWORD_RESET_SUCCESS": "تم تحديث كلمة المرور بنجاح.",
+		"RESET_ERROR": "حدث خطأ أثناء عملية إعادة التعيين."
+	},
+	"VALIDATION": {
+		"MISSING_REQUIRED_FIELDS": "الرجاء تعبئة جميع الحقول المطلوبة.",
+		"EMAIL_OR_PHONE_TAKEN": "البريد الإلكتروني أو رقم الهاتف مستخدم بالفعل.",
+		"NEW_PASSWORD_TOO_SHORT": "كلمة المرور يجب أن تكون 6 أحرف على الأقل.",
+		"INVALID_USER_ID": "معرّف المستخدم غير صالح.",
+		"RESET_FIELDS_REQUIRED": "الرجاء إدخال الهاتف، الكود، وكلمة المرور الجديدة."
+	},
+	"GENERAL": {
+		"SERVER_ERROR": "حدث خطأ في الخادم.",
+		"REQUEST_FAILED": "حدث خطأ أثناء تنفيذ الطلب."
+	},
+	"PASSWORD_CHANGED": "PASSWORD_CHANGED"
+}

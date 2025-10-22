@@ -6,7 +6,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const { validateRequiredFields, checkUniqueFields } = require('../services/fieldValidator');
-const { requestVerificationCode } = require('../services/verificationService');
+const { requestVerificationCode, verifyCode } = require('../services/verificationService');
 const VerificationCode = require('../models/VerificationCode');
 
 exports.signup = async (req, res) => {
@@ -41,10 +41,10 @@ exports.signup = async (req, res) => {
 exports.login = async (req, res) => {
   const { phone, password } = req.body;
   const user = await User.findOne({ phone, block:false }).select('+password');
-  if (!user) return res.status(401).json({ message: 'Invalid credentials' });
+  if (!user) return res.status(401).json({ message: req.__('AUTH.INVALID_CREDENTIALS') });
 
   const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
+  if (!isMatch) return res.status(401).json({ message: req.__('AUTH.INVALID_CREDENTIALS') });
   const userObject = user.toObject();
   //userObject.id = user._id
   delete userObject.password;
@@ -95,18 +95,47 @@ exports.addUser = async (req, res) => {
 
 //////// Change Password
 exports.changePassword = async (req, res) => {
-  const { oldPassword, password, phone } = req.body;
-  const hashed = await bcrypt.hash(password, 10);
+  try {
+    const currentUser = req.user;
+    const { oldPassword, newPassword } = req.body;
 
-  const result = await User.updateOne(
-      { phone: phone },
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ error: req.__('AUTH.OLD_PASSWORD_REQUIRED')  });
+    }
+
+    // جلب المستخدم من قاعدة البيانات
+    const user = await User.findOne({ _id: currentUser.id }).select('+password');;
+
+    if (!user) {
+      return res.status(404).json({ error: req.__('AUTH.USER_NOT_FOUND') });
+    }
+
+    // مقارنة كلمة المرور القديمة
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+
+    if (!isMatch) {
+      return res.status(400).json({ error: req.__('AUTH.OLD_PASSWORD_INCORRECT')  });
+    }
+
+    // تشفير كلمة المرور الجديدة
+    const hashed = await bcrypt.hash(newPassword, 10);
+
+    // تحديث كلمة المرور
+    await User.updateOne(
+      { phone: user.phone },
       { $set: { password: hashed } }
     );
-console.log('UUU',phone,hashed);
-  const cleanUser = await User.findOne({phone : phone}).select('-password'); /// Remove password from user object
-  const userObject = cleanUser.toObject();
 
-  res.status(201).json({user:userObject});
+    // جلب بيانات المستخدم بدون كلمة المرور
+    const cleanUser = await User.findOne({ phone: user.phone }).select('-password');
+    const userObject = cleanUser.toObject();
+
+    res.status(200).json({ user: userObject, message:  req.__('AUTH.PASSWORD_CHANGED')  });
+
+  } catch (err) {
+    console.error('Error changing password:', err);
+    res.status(500).json({ error: req.__('AUTH.RESET_ERROR')});
+  }
 };
 
 /////======
@@ -114,7 +143,7 @@ exports.forgotPassword = async (req, res) => {
   try {
     const { phone } = req.body;
     if (!phone) {
-      return res.status(400).json({ ok: false, message: 'من فضلك أدخل رقم الهاتف.' });
+      return res.status(400).json({ ok: false, message: req.__('AUTH.PHONE_REQUIRED') });
     }
 
     // normalize the phone number (نفس اللي في service عشان التوافق)
@@ -123,7 +152,7 @@ exports.forgotPassword = async (req, res) => {
     // تحقق من وجود المستخدم
     const user = await User.findOne({ phone: phone });
     if (!user) {
-      return res.status(404).json({ ok: false, message: 'هذا الرقم غير مسجل لدينا.' });
+      return res.status(404).json({ ok: false, message: req.__('AUTH.PHONE_NOT_REGISTERED') });
     }
 
     // الرقم موجود، أرسل كود التحقق
@@ -135,16 +164,17 @@ exports.forgotPassword = async (req, res) => {
     return res.json(result);
   } catch (err) {
     console.error('forgotPassword error:', err.message);
-    return res.status(500).json({ ok: false, message: 'حدث خطأ أثناء تنفيذ الطلب.' });
+    return res.status(500).json({ ok: false, message: req.__('GENERAL.REQUEST_FAILED')  });
   }
 };
-/////=====
+/////===== verify Code
 exports.verifyCode = async (req, res) => {
   const { phone, code } = req.body;
-  if (!phone || !code) return res.status(400).json({ ok: false, message: 'الرجاء إدخال رقم الهاتف والرمز.' });
+  if (!phone || !code) return res.status(400).json({ ok: false, message: req.__('AUTH.CODE_REQUIRED')});
 
   try {
-    const result = await verifyResetCode(phone, code);
+
+    const result = await verifyCode({phone, code});
     // result.resetToken => يُستخدم في خطوة تغيير كلمة المرور
     return res.json(result);
   } catch (err) {
@@ -163,13 +193,13 @@ exports.resetPasswordWithCode = async (req, res) => {
     const { phone, code, newPassword } = req.body;
 
     if (!phone || !code || !newPassword) {
-      return res.status(400).json({ ok: false, message: 'الرجاء إدخال الهاتف، الكود، وكلمة المرور الجديدة.' });
+      return res.status(400).json({ ok: false, message:  req.__('VALIDATION.RESET_FIELDS_REQUIRED') });
     }
 
     if (newPassword.length < 6) {
-      return res.status(400).json({ ok: false, message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل.' });
+      return res.status(400).json({ ok: false, message: req.__('VALIDATION.NEW_PASSWORD_TOO_SHORT') });
     }
-console.log('phoneee',phone, newPassword,code);
+
   //  const normalizedPhone = normalizeEgyptPhone(phone);
 
     // جلب أحدث كود صالح من نوع reset_password
@@ -177,16 +207,16 @@ console.log('phoneee',phone, newPassword,code);
     const vc = await VerificationCode.findOne({
       phone: phone,
       type: 'ResetPassword',
-      used: false,
+      //used: false,
       expiresAt: { $gt: now }
     }).sort({ createdAt: -1 });
-
+console.log('phoneee',vc);
     if (!vc) {
-      return res.status(400).json({ ok: false, message: 'الرمز غير صالح أو منتهي الصلاحية.' });
+      return res.status(400).json({ ok: false, message: req.__('AUTH.INVALID_OR_EXPIRED_CODE') });
     }
 
     if (vc.attempts >= 5) {
-      return res.status(429).json({ ok: false, message: 'تم تجاوز عدد المحاولات المسموح بها.' });
+      return res.status(429).json({ ok: false, message: req.__('AUTH.TOO_MANY_ATTEMPTS') });
     }
 
     // قارن الكود المقدم مع الهَش
@@ -197,7 +227,7 @@ console.log('phoneee',phone, newPassword,code);
 
     if (!isMatch) {
       await vc.save();
-      return res.status(400).json({ ok: false, message: 'الرمز غير صحيح.' });
+      return res.status(400).json({ ok: false, message: req.__('AUTH.CODE_INCORRECT') });
     }
 
     // الكود صحيح -> تأكد من وجود المستخدم
@@ -206,7 +236,7 @@ console.log('phoneee',phone, newPassword,code);
       // نعلم الكود كمستخدم لحمايته من إعادة استعمال، لكن نُرجع رسالة عامة
       vc.used = true;
       await vc.save();
-      return res.status(404).json({ ok: false, message: 'المستخدم غير موجود.' });
+      return res.status(404).json({ ok: false, message: req.__('AUTH.USER_NOT_FOUND')});
     }
 
     // هاش الباسورد الجديد وحفظه
@@ -228,10 +258,10 @@ console.log('phoneee',phone, newPassword,code);
       console.warn('Warning: failed to mark other codes used:', e.message);
     }
 
-    return res.json({ ok: true, message: 'تم تحديث كلمة المرور بنجاح.' });
+    return res.json({ ok: true, message: req.__('AUTH.PASSWORD_CHANGED') });
   } catch (err) {
     console.error('resetPasswordWithCode error:', err);
-    return res.status(500).json({ ok: false, message: 'حدث خطأ أثناء عملية إعادة التعيين.' });
+    return res.status(500).json({ ok: false, message: req.__('AUTH.RESET_ERROR') });
   }
 };
 
@@ -298,6 +328,6 @@ exports.getUsers = async (req, res) => {
     res.json({ data: users });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: req.__('GENERAL.SERVER_ERROR')});
   }
 };

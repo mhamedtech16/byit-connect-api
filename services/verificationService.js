@@ -123,7 +123,48 @@ async function requestVerificationCode({ phone, purpose = 'ResetPassword' }) {
   return { ok: true, message: 'إذا كان الرقم مسجلاً، سترسل رسالة له برمز التحقق.' };
 }
 
+
+/////===== verifyCode
+// services/verificationService.js (تكملة)
+
+async function verifyCode({ phone, code, purpose = 'ResetPassword' }) {
+
+  if (!phone || !code) throw new Error('رقم الهاتف والكود مطلوبان.');
+  //const normalizedPhone = normalizeEgyptPhone(phone);
+
+  const now = new Date();
+
+  // نبحث عن آخر كود غير مستخدم وغير منتهي
+  const existing = await VerificationCode.findOne({
+    phone: phone,
+    type: purpose,
+    used: false,
+    expiresAt: { $gt: now }
+  }).sort({ createdAt: -1 });
+
+  if (!existing) {
+    throw new Error('لم يتم العثور على رمز تحقق صالح.');
+  }
+
+  // تحقق من الكود باستخدام bcrypt
+  const isMatch = await bcrypt.compare(code, existing.codeHash);
+  if (!isMatch) {
+    throw new Error('رمز التحقق غير صحيح.');
+  }
+
+  // حدّث السجل ليُعلِم بأنه تم استخدامه
+  existing.used = true;
+  await existing.save();
+
+  return {
+    ok: true,
+    message: 'تم التحقق من الرمز بنجاح.'
+  };
+}
+
+
 module.exports = {
   requestVerificationCode,
-  generateNumericCode
+  generateNumericCode,
+  verifyCode
 };
