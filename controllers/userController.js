@@ -343,7 +343,7 @@ exports.getUsers = async (req, res) => {
 
     // بنبني query object فاضي
     const query = {};
-
+    query.block = false
     if (type) {
       query.type = type;   // لو في role نحطه
     }
