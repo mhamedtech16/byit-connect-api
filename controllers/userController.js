@@ -103,7 +103,7 @@ exports.setNewPassword = async (req, res) => {
 
 
     // جلب المستخدم من قاعدة البيانات
-    const user = await User.findOne({ _id: currentUser.id }).select('+password');;
+    const user = await User.findOne({ phone: phone }).select('+password');;
 
     if (!user) {
       return res.status(404).json({ error: req.__('AUTH.USER_NOT_FOUND') });
@@ -340,6 +340,9 @@ exports.getUsers = async (req, res) => {
   try {
     const { type, status } = req.query;
     const querySearch = req.query.query
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
     // بنبني query object فاضي
     const query = {};
@@ -360,10 +363,37 @@ exports.getUsers = async (req, res) => {
     ];
   }
 
-    const users = await User.find(query).select('-password');
-    res.json({ data: users });
+  const [users, total] = await Promise.all([
+      User.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      User.countDocuments(query)
+  ]);
+
+    //const users = await User.find(query).select('-password');
+
+    res.json({
+        data: users,
+        total,
+        page,
+        limit
+    });
+  //  res.json({ data: users });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: req.__('GENERAL.SERVER_ERROR')});
+  }
+};
+
+////===== Delete User
+exports.deleteUser = async (req, res)=>{
+  const id = req.params.id
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: req.__('AUTH.USER_NOT_FOUND') });
+    }
+    res.json({ message: req.__('USER_DELETED_SUCCESSFULLY') });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: req.__('GENERAL.SERVER_ERROR') });
   }
 };

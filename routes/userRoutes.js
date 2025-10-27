@@ -15,6 +15,7 @@ router.post('/forgotPassword', userController.forgotPassword);
 router.post('/setNewPassword',authMiddleware, userController.setNewPassword);
 router.post('/resetPasswordWithCode', userController.resetPasswordWithCode);
 router.post('/verifyCode', userController.verifyCode);
+router.delete('/deleteUser/:id', authMiddleware, userController.deleteUser); // 👈 محمي
 
 
 

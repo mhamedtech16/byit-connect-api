@@ -25,5 +25,6 @@
 		"SERVER_ERROR": "Server error occurred.",
 		"REQUEST_FAILED": "An error occurred while processing the request."
 	},
-	"PASSWORD_CHANGED": "PASSWORD_CHANGED"
+	"PASSWORD_CHANGED": "PASSWORD_CHANGED",
+	"USER_DELETED_SUCCESSFULLY":"User deleted successfully"
 }

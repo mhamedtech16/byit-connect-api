@@ -145,12 +145,11 @@ exports.getClients = async (req, res) => {
             query.status = status;
         }
         if (txtSearch) {
-    query.$or = [
+        query.$or = [
         { clientName: { $regex: txtSearch, $options: 'i' } },
         { clientPhone: { $regex: txtSearch, $options: 'i' } }
     ];
 }
-
         const [clients, total] = await Promise.all([
             Client.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit),
             Client.countDocuments(query)

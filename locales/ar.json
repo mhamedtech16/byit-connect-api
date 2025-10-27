@@ -25,5 +25,6 @@
 		"SERVER_ERROR": "حدث خطأ في الخادم.",
 		"REQUEST_FAILED": "حدث خطأ أثناء تنفيذ الطلب."
 	},
-	"PASSWORD_CHANGED": "PASSWORD_CHANGED"
+	"PASSWORD_CHANGED": "تم تغيير كلمة المرور",
+	"USER_DELETED_SUCCESSFULLY":"تم مسح المستخدم بنجاح"
 }
