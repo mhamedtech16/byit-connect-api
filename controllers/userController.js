@@ -24,7 +24,7 @@ exports.signup = async (req, res) => {
 
   const { fullname, email, password, type, country, phone, invitationCode } = req.body;
   const hashed = await bcrypt.hash(password, 10);
-  const parentUser = await User.findOne({invitationCode:invitationCode});
+  const parentUser = await User.findOne({invitationCode:invitationCode.toUpperCase()});
   console.log('parentUser',parentUser);
   const user = await User.create({ fullname, email, password: hashed, type, approved:true, country:country, verifycode:2354, verifyEmail:true, verifyPhone:true ,phone: phone, parentUser: parentUser._id, block : false});
   const cleanUser = await User.findById(user._id).select('-password'); /// Remove password from user object
