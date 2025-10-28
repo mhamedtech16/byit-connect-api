@@ -387,7 +387,7 @@ exports.getUsers = async (req, res) => {
 exports.deleteUser = async (req, res)=>{
   const id = req.params.id
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
+    const user = await User.findByIdAndUpdate(req.params.id, { deleted: true })
     if (!user) {
       return res.status(404).json({ message: req.__('AUTH.USER_NOT_FOUND') });
     }
