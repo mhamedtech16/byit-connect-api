@@ -345,7 +345,7 @@ exports.getUsers = async (req, res) => {
     const skip = (page - 1) * limit;
 
     // بنبني query object فاضي
-    const query = {};
+    const query = {deleted: { $ne: true } };
     query.block = false
     if (type) {
       query.type = type;   // لو في role نحطه
