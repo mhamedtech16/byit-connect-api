@@ -12,7 +12,8 @@
 		"TOO_MANY_ATTEMPTS": "تم تجاوز عدد المحاولات المسموح بها.",
 		"CODE_INCORRECT": "الرمز غير صحيح.",
 		"PASSWORD_RESET_SUCCESS": "تم تحديث كلمة المرور بنجاح.",
-		"RESET_ERROR": "حدث خطأ أثناء عملية إعادة التعيين."
+		"RESET_ERROR": "حدث خطأ أثناء عملية إعادة التعيين.",
+		"INVITATION_CODE_NOT_VALID":"كود الدعوة غير صحيح"
 	},
 	"VALIDATION": {
 		"MISSING_REQUIRED_FIELDS": "الرجاء تعبئة جميع الحقول المطلوبة.",
