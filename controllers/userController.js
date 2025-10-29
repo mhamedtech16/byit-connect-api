@@ -350,9 +350,13 @@ exports.getUsers = async (req, res) => {
     // بنبني query object فاضي
     const query = {deleted: { $ne: true } };
     query.block = false
-    if (type) {
-      query.type = type;   // لو في role نحطه
-    }
+  if (type) {
+  if (Array.isArray(type)) {
+    query.type = { $in: type }; // لو array استخدم $in
+  } else {
+    query.type = type; // لو string خليه مباشر
+  }
+}
 
     if (status) {
       query.block = status =='active'? false : true ;  // لو في status نحطه
